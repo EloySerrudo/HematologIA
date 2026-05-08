@@ -13,8 +13,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator, Optional
 
-from hematologia.config import DB_PATH
-from hematologia.core.logger import get_logger
+from src.config import DB_PATH
+from src.core.logger import get_logger
 
 _logger = get_logger(__name__)
 
@@ -25,7 +25,7 @@ def get_connection(db_path: Optional[Path] = None) -> Iterator[sqlite3.Connectio
 
     Args:
         db_path: Override path to the database file. Defaults to
-            ``hematologia.config.DB_PATH``.
+            ``src.config.DB_PATH``.
 
     Yields:
         A SQLite connection with row factory set and FK enforcement enabled.

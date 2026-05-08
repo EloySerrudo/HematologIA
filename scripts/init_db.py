@@ -7,7 +7,7 @@ Usage:
     python scripts/init_db.py            # create DB if it doesn't exist
     python scripts/init_db.py --reset    # delete and recreate the DB
 
-The script lives outside the `hematologia` package because it's an operational
+The script lives outside the `src` package because it's an operational
 tool, not part of the runtime app. It still imports from the package to reuse
 config and the connection helper.
 """
@@ -24,8 +24,8 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 import bcrypt
 
-from hematologia.config import DATA_DIR, DB_PATH, SCHEMA_PATH
-from hematologia.database.connection import get_connection
+from src.config import DATA_DIR, DB_PATH, SCHEMA_PATH
+from src.database.connection import get_connection
 
 
 # Seed users for development. Passwords are hashed at runtime — never commit hashes.

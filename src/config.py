@@ -5,7 +5,7 @@ this file rather than defining their own constants.
 """
 from __future__ import annotations
 
-from hematologia.utils.paths import resolve_from_root
+from src.utils.paths import resolve_from_root
 
 # --- Application metadata ---------------------------------------------------
 APP_NAME: str = "HematologIA"
@@ -23,13 +23,13 @@ DB_PATH = resolve_from_root("data", "hematologia.db")
 LOG_PATH = resolve_from_root("logs", "hematologia.log")
 
 # UI assets
-STYLES_DIR = resolve_from_root("hematologia", "ui", "styles")
-ASSETS_DIR = resolve_from_root("hematologia", "ui", "styles", "assets")
-LOGIN_QSS_PATH = resolve_from_root("hematologia", "ui", "styles", "login.qss")
+STYLES_DIR = resolve_from_root("src", "ui", "styles")
+ASSETS_DIR = resolve_from_root("src", "ui", "styles", "assets")
+LOGIN_QSS_PATH = resolve_from_root("src", "ui", "styles", "login.qss")
 LOGIN_REFERENCE_IMAGE = resolve_from_root("Login_window.jpeg")
-ASSET_MICROSCOPE = resolve_from_root("hematologia", "ui", "styles", "assets", "microscope.png")
-ASSET_CELLS = resolve_from_root("hematologia", "ui", "styles", "assets", "cells.png")
-ASSET_HEXAGONS = resolve_from_root("hematologia", "ui", "styles", "assets", "hexagons.png")
+ASSET_MICROSCOPE = resolve_from_root("src", "ui", "styles", "assets", "microscope.png")
+ASSET_CELLS = resolve_from_root("src", "ui", "styles", "assets", "cells.png")
+ASSET_HEXAGONS = resolve_from_root("src", "ui", "styles", "assets", "hexagons.png")
 
 # --- Settings persistence ---------------------------------------------------
 # Used by QSettings (e.g. for "Recordar sesión").

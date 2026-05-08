@@ -6,9 +6,9 @@ Two-pane layout matching ``Login_window.jpeg``:
   * Right form panel: title, user/password inputs, remember-me checkbox,
     primary login button and footer.
 
-Visual styles live in ``hematologia/ui/styles/login.qss``. Icons are sourced
+Visual styles live in ``src/ui/styles/login.qss``. Icons are sourced
 from qtawesome (Font Awesome). Image assets live in
-``hematologia/ui/styles/assets/``.
+``src/ui/styles/assets/``.
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from hematologia.config import (
+from src.config import (
     APP_DISPLAY_NAME,
     APP_ORGANIZATION,
     ASSET_CELLS,
@@ -41,9 +41,9 @@ from hematologia.config import (
     LOGIN_WINDOW_WIDTH,
     SETTING_REMEMBER_USER,
 )
-from hematologia.core.auth import authenticate
-from hematologia.core.logger import get_logger
-from hematologia.core.session import get_session
+from src.core.auth import authenticate
+from src.core.logger import get_logger
+from src.core.session import get_session
 
 _logger = get_logger(__name__)
 

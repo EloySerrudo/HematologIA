@@ -16,19 +16,19 @@ import sys
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-from hematologia.config import (
+from src.config import (
     APP_DISPLAY_NAME,
     APP_NAME,
     APP_ORGANIZATION,
     APP_VERSION,
     DB_PATH,
 )
-from hematologia.core.logger import get_logger, setup_logger
-from hematologia.core.session import get_session
-from hematologia.ui.jefe.main_window import JefeMainWindow
-from hematologia.ui.login_window import LoginWindow
-from hematologia.ui.personal.main_window import PersonalMainWindow
-from hematologia.ui.splash_window import SplashWindow
+from src.core.logger import get_logger, setup_logger
+from src.core.session import get_session
+from src.ui.jefe.main_window import JefeMainWindow
+from src.ui.login_window import LoginWindow
+from src.ui.personal.main_window import PersonalMainWindow
+from src.ui.splash_window import SplashWindow
 
 
 class AppController:

@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from hematologia.config import (
+from src.config import (
     APP_DISPLAY_NAME,
     APP_VERSION,
     SPLASH_DURATION_MS,

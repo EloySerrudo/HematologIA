@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from hematologia.database.models import Operario
+from src.database.models import Operario
 
 
 class Session:

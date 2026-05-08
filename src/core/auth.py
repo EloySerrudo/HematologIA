@@ -13,9 +13,9 @@ from typing import Optional
 
 import bcrypt
 
-from hematologia.core.logger import get_logger
-from hematologia.database.models import Operario
-from hematologia.database.repositories import operario_repo
+from src.core.logger import get_logger
+from src.database.models import Operario
+from src.database.repositories import operario_repo
 
 _logger = get_logger(__name__)
 

@@ -1,7 +1,7 @@
 """Centralized logger configuration with rotating file handler.
 
 Usage:
-    from hematologia.core.logger import get_logger
+    from src.core.logger import get_logger
     logger = get_logger(__name__)
     logger.info("Message")
 
@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 from logging.handlers import RotatingFileHandler
 
-from hematologia.config import (
+from src.config import (
     APP_NAME,
     LOG_BACKUP_COUNT,
     LOG_DATE_FORMAT,
@@ -74,6 +74,6 @@ def get_logger(name: str | None = None) -> logging.Logger:
         return logging.getLogger(APP_NAME)
 
     # Strip the package prefix so log lines say e.g. "core.auth" instead of
-    # "hematologia.core.auth.HematologIA" once the parent prefix is added.
-    short = name.removeprefix("hematologia.")
+    # "src.core.auth.HematologIA" once the parent prefix is added.
+    short = name.removeprefix("src.")
     return logging.getLogger(f"{APP_NAME}.{short}")

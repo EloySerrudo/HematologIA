@@ -9,8 +9,8 @@ import sqlite3
 from datetime import datetime
 from typing import Optional
 
-from hematologia.database.connection import get_connection
-from hematologia.database.models import Operario
+from src.database.connection import get_connection
+from src.database.models import Operario
 
 
 def _row_to_operario(row: sqlite3.Row) -> Operario:

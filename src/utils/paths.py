@@ -11,10 +11,10 @@ from pathlib import Path
 def get_project_root() -> Path:
     """Return the absolute path to the project root.
 
-    The project root is the directory containing the ``hematologia`` package,
+    The project root is the directory containing the ``src`` package,
     ``main.py``, ``schema.sql``, etc.
 
-    This file is at ``<root>/hematologia/utils/paths.py``, so the root is three
+    This file is at ``<root>/src/utils/paths.py``, so the root is three
     levels up from this file.
     """
     return Path(__file__).resolve().parents[2]

@@ -1,8 +1,8 @@
-"""Main window for the 'jefe' role.
+"""Main window for the 'personal' role.
 
 Placeholder for Fase 1 — only displays a welcome message and a logout button.
-The actual functionality (gestión de operarios, todos los estudios, etc.)
-will be built later, after the Personal flow is validated.
+The actual functionality (estudios, capturas, reportes) will be built
+incrementally in subsequent windows.
 """
 from __future__ import annotations
 
@@ -17,25 +17,25 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from hematologia.config import APP_DISPLAY_NAME
-from hematologia.core.session import get_session
+from src.config import APP_DISPLAY_NAME
+from src.core.session import get_session
 
 
-class JefeMainWindow(QMainWindow):
-    """Placeholder main window for operarios with rol='jefe'."""
+class PersonalMainWindow(QMainWindow):
+    """Placeholder main window for operarios with rol='personal'."""
 
     logout_requested = Signal()
 
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle(f"{APP_DISPLAY_NAME} — Jefe")
+        self.setWindowTitle(f"{APP_DISPLAY_NAME} — Personal")
         self.resize(900, 600)
 
         self._build_ui()
 
     def _build_ui(self) -> None:
         operario = get_session().operario
-        nombre = operario.nombre_completo if operario else "Jefe"
+        nombre = operario.nombre_completo if operario else "Operario"
 
         central = QWidget()
         layout = QVBoxLayout(central)
@@ -48,7 +48,7 @@ class JefeMainWindow(QMainWindow):
         welcome.setFont(welcome_font)
         welcome.setAlignment(Qt.AlignCenter)
 
-        rol_label = QLabel("Rol: Jefe de Laboratorio")
+        rol_label = QLabel("Rol: Personal")
         rol_label.setAlignment(Qt.AlignCenter)
 
         layout.addStretch()
