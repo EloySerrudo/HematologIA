@@ -1,0 +1,73 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+develop-eggs/
+parts/
+sdist/
+wheels/
+share/python-wheels/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# --- Project data (NO versionar) ---
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+data/capturas/*
+!data/.gitkeep
+!data/capturas/.gitkeep
+
+# --- Logs ---
+logs/*.log
+logs/*.log.*
+!logs/.gitkeep
+
+# --- IDE / Editores ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.claude/
+CLAUDE.md
+Login_window.jpeg
+.spyderproject
+.spyproject
+
+# --- OS ---
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# --- Testing / Coverage ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Legacy (proyecto anterior) ---
+legacy/

@@ -1,0 +1,205 @@
+/* =============================================================================
+   login.qss — estilos de la ventana de login
+   =============================================================================
+   Paleta (mantener sincronizado con _COLOR_* en login_window.py):
+       Azul oscuro (panel)        : #1E3A8A
+       Azul primario (botón)      : #1E40AF / #1D4ED8 (hover)
+       Azul claro (subtítulos)    : #BFDBFE
+       Texto principal            : #1F2937
+       Texto secundario           : #6B7280
+       Borde de inputs            : #E5E7EB
+       Fondo input                : #F9FAFB
+       Rojo logo / errores        : #DC2626
+   ============================================================================= */
+
+
+/* --- Ventana raíz --------------------------------------------------------- */
+QWidget#loginWindow {
+    background-color: #FFFFFF;
+}
+
+
+/* --- Panel izquierdo (branding) ------------------------------------------ */
+QFrame#brandPanel {
+    background: qlineargradient(
+        x1:0, y1:0, x2:0, y2:1,
+        stop:0 #1E3A8A,
+        stop:1 #1E40AF
+    );
+    border: none;
+}
+
+QLabel#brandTitle {
+    color: #FFFFFF;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+QLabel#brandSubtitle {
+    color: #BFDBFE;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 11px;
+}
+
+QLabel#hexBackdrop {
+    background: transparent;
+}
+
+QLabel#microscopeImage {
+    background: transparent;
+}
+
+/* Feature cards (Seguro / Inteligente / Confiable / Rápido) */
+QLabel#featureTitle {
+    color: #FFFFFF;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+QLabel#featureDesc {
+    color: #BFDBFE;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 9px;
+}
+
+
+/* --- Panel derecho (formulario) ------------------------------------------ */
+QFrame#formPanel {
+    background-color: #FFFFFF;
+    border: none;
+}
+
+QLabel#formTitle {
+    color: #1F2937;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+QFrame#formTitleUnderline {
+    background-color: #1E40AF;
+    border-radius: 1px;
+}
+
+QLabel#fieldLabel {
+    color: #1F2937;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/* --- Inputs (usuario / contraseña) --------------------------------------- */
+/* Focus state is driven by a dynamic property `focused` set from Python via
+   a focus event filter — `:focus-within` is not supported by Qt Stylesheets. */
+QFrame#inputWrapper {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+}
+
+QFrame#inputWrapper[focused="true"] {
+    border: 1px solid #1E40AF;
+    background-color: #FFFFFF;
+}
+
+QLineEdit#usuarioInput,
+QLineEdit#passwordInput {
+    background: transparent;
+    border: none;
+    color: #1F2937;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 13px;
+    padding: 0px;
+    selection-background-color: #BFDBFE;
+    placeholder-text-color: #9CA3AF;
+}
+
+QToolButton#togglePasswordButton {
+    background: transparent;
+    border: none;
+    padding: 4px;
+}
+
+QToolButton#togglePasswordButton:hover {
+    background-color: #F3F4F6;
+    border-radius: 4px;
+}
+
+
+/* --- Checkbox "Recordar sesión" ------------------------------------------ */
+QCheckBox#rememberCheckbox {
+    color: #6B7280;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 12px;
+    spacing: 8px;
+}
+
+QCheckBox#rememberCheckbox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #D1D5DB;
+    border-radius: 3px;
+    background-color: #FFFFFF;
+}
+
+QCheckBox#rememberCheckbox::indicator:hover {
+    border: 1px solid #1E40AF;
+}
+
+QCheckBox#rememberCheckbox::indicator:checked {
+    background-color: #1E40AF;
+    border: 1px solid #1E40AF;
+    image: none;
+}
+
+
+/* --- Botón principal "Iniciar Sesión" ------------------------------------ */
+QPushButton#loginButton {
+    background-color: #1E40AF;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 0 16px;
+}
+
+QPushButton#loginButton:hover {
+    background-color: #1D4ED8;
+}
+
+QPushButton#loginButton:pressed {
+    background-color: #1E3A8A;
+}
+
+QPushButton#loginButton:disabled {
+    background-color: #93C5FD;
+    color: #E5E7EB;
+}
+
+
+/* --- Mensajes de error --------------------------------------------------- */
+QLabel#errorLabel {
+    color: #DC2626;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+
+/* --- Footer -------------------------------------------------------------- */
+QLabel#formFooter {
+    color: #9CA3AF;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 10px;
+}
+
+
+/* --- Decoración de células ---------------------------------------------- */
+QLabel#cellsDeco {
+    background: transparent;
+}
