@@ -1,70 +1,75 @@
 """Main window for the 'personal' role.
 
-Placeholder for Fase 1 — only displays a welcome message and a logout button.
-The actual functionality (estudios, capturas, reportes) will be built
-incrementally in subsequent windows.
+Wraps the reusable ``MainShell`` (sidebar + header) around a Personal-specific
+content stack. In Fase 1 the only real content is the dashboard view; the
+remaining nav items show a "Próximamente" notice.
 """
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QMainWindow,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
-
-from src.config import APP_DISPLAY_NAME
 from src.core.session import get_session
+from src.ui.personal.dashboard_view import DashboardView
+from src.ui.shell.main_shell import MainShell
+from src.ui.shell.sidebar import NavItem
+from src.ui.widgets.coming_soon import show_coming_soon
 
 
-class PersonalMainWindow(QMainWindow):
-    """Placeholder main window for operarios with rol='personal'."""
+# Navigation items for the Personal sidebar. The order matches the design.
+_PERSONAL_NAV: list[NavItem] = [
+    NavItem(key="dashboard",  label="Dashboard",         icon_name="fa5s.th-large"),
+    NavItem(key="captura",    label="Captura de Imagen", icon_name="fa5s.camera"),
+    NavItem(key="analisis",   label="Análisis",          icon_name="fa5s.microscope"),
+    NavItem(key="estudios",   label="Mis Estudios",      icon_name="fa5s.folder-open"),
+    NavItem(key="reportes",   label="Reportes",          icon_name="fa5s.file-pdf"),
+]
 
-    logout_requested = Signal()
+# Human-friendly labels for the "Próximamente" notice.
+_NAV_LABELS: dict[str, str] = {
+    "captura":  "Captura de Imagen",
+    "analisis": "Análisis",
+    "estudios": "Mis Estudios",
+    "reportes": "Reportes",
+}
+
+
+class PersonalMainWindow(MainShell):
+    """Main window for operarios with rol='personal'.
+
+    Inherits ``nav_clicked`` and ``logout_requested`` signals from
+    :class:`MainShell`; wires ``nav_clicked`` to swap the content widget,
+    leaves ``logout_requested`` for the AppController to handle.
+    """
 
     def __init__(self) -> None:
-        super().__init__()
-        self.setWindowTitle(f"{APP_DISPLAY_NAME} — Personal")
-        self.resize(900, 600)
-
-        self._build_ui()
-
-    def _build_ui(self) -> None:
         operario = get_session().operario
-        nombre = operario.nombre_completo if operario else "Operario"
+        if operario is None:
+            raise RuntimeError("PersonalMainWindow opened without an authenticated operario")
 
-        central = QWidget()
-        layout = QVBoxLayout(central)
-        layout.setContentsMargins(40, 40, 40, 40)
+        super().__init__(
+            operario=operario,
+            nav_items=_PERSONAL_NAV,
+            active_nav_key="dashboard",
+            title_suffix="Personal",
+        )
 
-        welcome = QLabel(f"Bienvenido, {nombre}")
-        welcome_font = QFont()
-        welcome_font.setPointSize(20)
-        welcome_font.setBold(True)
-        welcome.setFont(welcome_font)
-        welcome.setAlignment(Qt.AlignCenter)
+        # Open maximized — lab PCs typically run this app foreground on a single monitor.
+        self.showMaximized()
 
-        rol_label = QLabel("Rol: Personal")
-        rol_label.setAlignment(Qt.AlignCenter)
+        self.nav_clicked.connect(self._on_nav_clicked)
 
-        layout.addStretch()
-        layout.addWidget(welcome)
-        layout.addWidget(rol_label)
-        layout.addStretch()
+        # Initial content: the dashboard.
+        self._dashboard = DashboardView(operario)
+        self.set_content(self._dashboard)
 
-        bottom = QHBoxLayout()
-        bottom.addStretch()
-        logout_btn = QPushButton("Cerrar sesión")
-        logout_btn.setFixedWidth(160)
-        logout_btn.clicked.connect(self._on_logout_clicked)
-        bottom.addWidget(logout_btn)
-        layout.addLayout(bottom)
+    # ------------------------------------------------------------------
+    # Navigation
+    # ------------------------------------------------------------------
 
-        self.setCentralWidget(central)
-
-    def _on_logout_clicked(self) -> None:
-        self.logout_requested.emit()
+    def _on_nav_clicked(self, key: str) -> None:
+        if key == "dashboard":
+            self.sidebar.set_active("dashboard")
+            new_view = DashboardView(get_session().operario)
+            self._dashboard = new_view
+            self.set_content(new_view)
+            return
+        # Any other entry is a stub for now — keep the active item unchanged.
+        show_coming_soon(self, _NAV_LABELS.get(key, key.title()))

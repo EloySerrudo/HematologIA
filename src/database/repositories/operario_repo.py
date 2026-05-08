@@ -20,6 +20,8 @@ def _row_to_operario(row: sqlite3.Row) -> Operario:
         nombre=row["nombre"],
         apellido_paterno=row["apellido_paterno"],
         apellido_materno=row["apellido_materno"],
+        profesion=row["profesion"],
+        genero=row["genero"],
         usuario=row["usuario"],
         password_hash=row["password_hash"],
         rol=row["rol"],

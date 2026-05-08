@@ -1,0 +1,239 @@
+/* =============================================================================
+   dashboard.qss — estilos del shell (sidebar + header + dashboard view)
+   =============================================================================
+   Paleta principal:
+       Azul oscuro panel       : #1E3A8A → #1E40AF (degradado vertical)
+       Azul claro (subtítulos) : #BFDBFE
+       Activo sidebar          : #2563EB
+       Fondo área contenido    : #F4F6FB
+       Tarjeta blanca          : #FFFFFF, borde #E5E7EB
+       Texto principal         : #111827
+       Texto secundario        : #6B7280
+   ============================================================================= */
+
+
+/* --- Root central widget -------------------------------------------------- */
+QWidget#shellRoot {
+    background-color: #F4F6FB;
+}
+
+
+/* --- Sidebar -------------------------------------------------------------- */
+QFrame#sidebar {
+    background: qlineargradient(
+        x1:0, y1:0, x2:0, y2:1,
+        stop:0 #1E3A8A,
+        stop:1 #1E40AF
+    );
+    border: none;
+}
+
+QFrame#sidebarBrand {
+    background: transparent;
+}
+
+QLabel#sidebarSubtitle {
+    color: #BFDBFE;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+QLabel#sidebarFooterLogo {
+    background: transparent;
+}
+
+/* Nav buttons: rectangular, full width, with rounded right edge when active.
+   We give them a horizontal margin via padding so they don't touch the edges. */
+QPushButton#sidebarNavButton {
+    background-color: transparent;
+    color: #BFDBFE;
+    border: none;
+    border-left: 4px solid transparent;
+    text-align: left;
+    padding: 8px 18px 8px 24px;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+QPushButton#sidebarNavButton:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #FFFFFF;
+}
+
+QPushButton#sidebarNavButton[active="true"] {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-left: 4px solid #FFFFFF;
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+
+/* --- Logout button -------------------------------------------------------- */
+QPushButton#logoutButton {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    padding: 0 16px;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+}
+
+QPushButton#logoutButton:hover {
+    background-color: rgba(220, 38, 38, 0.85);
+    border: 1px solid #DC2626;
+}
+
+
+/* --- Header --------------------------------------------------------------- */
+QFrame#appHeader {
+    background-color: #FFFFFF;
+    border: none;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+QLabel#headerTitle {
+    color: #111827;
+}
+
+QLabel#headerUserName {
+    color: #111827;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QLabel#headerUserRole {
+    color: #6B7280;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 11px;
+}
+
+
+/* --- Footer --------------------------------------------------------------- */
+QFrame#appFooter {
+    background-color: #FFFFFF;
+    border: none;
+    border-top: 1px solid #E5E7EB;
+}
+
+QLabel#footerCopyright {
+    color: #6B7280;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 11px;
+}
+
+QLabel#footerVersion {
+    color: #9CA3AF;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 11px;
+}
+
+
+/* --- Content area --------------------------------------------------------- */
+QStackedWidget#contentArea {
+    background-color: #F4F6FB;
+}
+
+QScrollArea#dashboardScroll,
+QWidget#dashboardContent,
+QWidget#dashboardView {
+    background-color: #F4F6FB;
+}
+
+
+/* --- Dashboard view: greeting + sections ---------------------------------- */
+QLabel#dashboardGreeting {
+    color: #111827;
+}
+
+QLabel#dashboardSubtitle {
+    color: #6B7280;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 12px;
+}
+
+QLabel#sectionTitle {
+    color: #111827;
+}
+
+
+/* --- Stat cards ----------------------------------------------------------- */
+QFrame#statCard {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+}
+
+QLabel#statCaption {
+    color: #6B7280;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+QLabel#statValue {
+    color: #111827;
+}
+
+QLabel#statTitle {
+    color: #6B7280;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 11px;
+}
+
+
+/* --- Quick actions section ------------------------------------------------ */
+QFrame#quickActionsSection {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+}
+
+QFrame#quickActionCard {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+}
+
+QFrame#quickActionCard:hover {
+    border: 1px solid #C7D2FE;
+}
+
+QLabel#quickTitle {
+    color: #111827;
+}
+
+QLabel#quickDescription {
+    color: #6B7280;
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    font-size: 11px;
+}
+
+
+/* --- Scrollbars (subtle, neutral) ---------------------------------------- */
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 4px 2px 4px 2px;
+}
+QScrollBar::handle:vertical {
+    background: #D1D5DB;
+    border-radius: 4px;
+    min-height: 24px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #9CA3AF;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
+}

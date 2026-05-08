@@ -26,10 +26,17 @@ LOG_PATH = resolve_from_root("logs", "hematologia.log")
 STYLES_DIR = resolve_from_root("src", "ui", "styles")
 ASSETS_DIR = resolve_from_root("src", "ui", "styles", "assets")
 LOGIN_QSS_PATH = resolve_from_root("src", "ui", "styles", "login.qss")
+DASHBOARD_QSS_PATH = resolve_from_root("src", "ui", "styles", "dashboard.qss")
 LOGIN_REFERENCE_IMAGE = resolve_from_root("Login_window.jpeg")
 ASSET_MICROSCOPE = resolve_from_root("src", "ui", "styles", "assets", "microscope.png")
 ASSET_CELLS = resolve_from_root("src", "ui", "styles", "assets", "cells.png")
 ASSET_HEXAGONS = resolve_from_root("src", "ui", "styles", "assets", "hexagons.png")
+ASSET_LOGO_HOSPITAL_WHITE = resolve_from_root(
+    "src", "ui", "styles", "assets", "SolomonKleinLogoWhite.png"
+)
+ASSET_LOGO_HOSPITAL_DARK = resolve_from_root(
+    "src", "ui", "styles", "assets", "SolomonKleinLogoOriginal.png"
+)
 
 # --- Settings persistence ---------------------------------------------------
 # Used by QSettings (e.g. for "Recordar sesión").
