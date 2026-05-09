@@ -217,6 +217,129 @@ QLabel#quickDescription {
 }
 
 
+/* --- Captura screen ------------------------------------------------------- */
+QWidget#capturaView {
+    background-color: #F4F6FB;
+}
+
+QFrame#captureSection {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+}
+
+QLabel#stripCounter {
+    color: #6B7280;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+QPushButton#changeCameraButton,
+QPushButton#inlineLinkButton {
+    background-color: #FFFFFF;
+    color: #1E40AF;
+    border: 1px solid #BFDBFE;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+QPushButton#changeCameraButton:hover,
+QPushButton#inlineLinkButton:hover {
+    background-color: #EFF6FF;
+    border: 1px solid #1E40AF;
+}
+
+QFrame#captureInfoBar {
+    background-color: #FFFFFF;
+    border: none;
+}
+QLabel#sessionTimer,
+QLabel#captureCounter {
+    color: #111827;
+    background-color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QPushButton#capturePrimaryButton {
+    background-color: #1E40AF;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 0 18px;
+}
+QPushButton#capturePrimaryButton:hover { background-color: #1D4ED8; }
+QPushButton#capturePrimaryButton:pressed { background-color: #1E3A8A; }
+QPushButton#capturePrimaryButton:disabled {
+    background-color: #93C5FD;
+    color: #E5E7EB;
+}
+
+QPushButton#captureSecondaryButton {
+    background-color: #FFFFFF;
+    color: #1E40AF;
+    border: 1px solid #BFDBFE;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 14px;
+}
+QPushButton#captureSecondaryButton:hover {
+    background-color: #EFF6FF;
+}
+
+QTableWidget#cellCountQTable {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    alternate-background-color: #F9FAFB;
+    font-size: 11px;
+    color: #1F2937;
+}
+QTableWidget#cellCountQTable::item {
+    padding: 4px 8px;
+    border: none;
+}
+QTableWidget#cellCountQTable QHeaderView::section {
+    background-color: #F3F4F6;
+    color: #374151;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 6px 8px;
+    border: none;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+QLabel#cellCountTotal {
+    color: #111827;
+    font-size: 12px;
+    padding: 4px 4px 0 0;
+}
+
+QFrame#guiaRapida {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+}
+QFrame#guiaStep {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+}
+QLabel#guiaStepTitle {
+    color: #111827;
+    font-size: 11px;
+    font-weight: 700;
+}
+QLabel#guiaStepDesc {
+    color: #6B7280;
+    font-size: 10px;
+}
+
+
 /* --- Scrollbars (subtle, neutral) ---------------------------------------- */
 QScrollBar:vertical {
     background: transparent;

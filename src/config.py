@@ -39,10 +39,16 @@ ASSET_LOGO_HOSPITAL_DARK = resolve_from_root(
 )
 
 # --- Settings persistence ---------------------------------------------------
-# Used by QSettings (e.g. for "Recordar sesión").
+# Used by QSettings (e.g. for "Recordar sesión", last camera, etc.).
 SETTINGS_ORG: str = "HematologIA"
 SETTINGS_APP: str = "HematologIA"
 SETTING_REMEMBER_USER: str = "login/remembered_user"
+SETTING_LAST_CAMERA: str = "captura/last_camera_description"
+
+# --- Captura -----------------------------------------------------------------
+# Capture format: original PNG (lossless) + JPEG thumbnail for the strip.
+CAPTURA_THUMBNAIL_MAX_PX: int = 256
+CAPTURA_THUMBNAIL_QUALITY: int = 85   # JPEG quality (0-100)
 
 # --- UI dimensions ----------------------------------------------------------
 LOGIN_WINDOW_WIDTH: int = 940

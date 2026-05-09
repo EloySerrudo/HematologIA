@@ -22,7 +22,6 @@ from PySide6.QtWidgets import (
 from src.core.logger import get_logger
 from src.database.models import DashboardStats, Operario
 from src.database.repositories.dashboard_repo import get_personal_stats
-from src.ui.widgets.coming_soon import show_coming_soon
 from src.ui.widgets.quick_action_card import QuickActionCard
 from src.ui.widgets.stat_card import StatCard
 
@@ -186,9 +185,10 @@ class DashboardView(QWidget):
     # ------------------------------------------------------------------
 
     def _on_quick_action(self, key: str, label: str) -> None:
+        # Just emit the signal — the owner (PersonalMainWindow) decides what
+        # to do (navigate to the implemented view or show "Próximamente").
         _logger.info("Quick action triggered: %s", key)
         self.quick_action_triggered.emit(key)
-        show_coming_soon(self, label)
 
     def refresh_stats(self) -> None:
         """Re-fetch dashboard stats from the DB and update the cards."""
