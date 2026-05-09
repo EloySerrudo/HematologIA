@@ -27,6 +27,7 @@ from src.ui.personal.paciente_picker_dialog import PacientePickerDialog
 from src.ui.shell.main_shell import MainShell
 from src.ui.shell.sidebar import NavItem
 from src.ui.widgets.coming_soon import show_coming_soon
+from src.ui.widgets.help_dialog import HelpDialog
 
 _logger = get_logger(__name__)
 
@@ -81,6 +82,7 @@ class PersonalMainWindow(MainShell):
 
         # Wire shell signals
         self.nav_clicked.connect(self._on_nav_clicked)
+        self.help_requested.connect(self._on_help_requested)
         # Intercept logout from the parent's signal — re-emit only after the
         # confirmation passes. We disconnect & reconnect via a dedicated handler.
         # Easier: shadow it by handling sidebar.logout_requested ourselves.
@@ -118,6 +120,10 @@ class PersonalMainWindow(MainShell):
         self._teardown_captura()
         # Forward to the AppController.
         self.logout_requested.emit()
+
+    def _on_help_requested(self) -> None:
+        """Open the contextual help popup for the active view."""
+        HelpDialog.show_for_key(self._active_nav_key, parent=self)
 
     # ------------------------------------------------------------------
     # View transitions

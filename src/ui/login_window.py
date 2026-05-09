@@ -35,6 +35,7 @@ from src.config import (
     APP_ORGANIZATION,
     ASSET_CELLS,
     ASSET_HEXAGONS,
+    ASSET_LOGO_HOSPITAL_WHITE,
     ASSET_MICROSCOPE,
     LOGIN_QSS_PATH,
     LOGIN_WINDOW_HEIGHT,
@@ -150,7 +151,9 @@ class LoginWindow(QWidget):
         microscope.setObjectName("microscopeImage")
         pix = QPixmap(str(ASSET_MICROSCOPE))
         if not pix.isNull():
-            scaled = pix.scaledToHeight(320, Qt.SmoothTransformation)
+            # Reduced from 320 → 280 to make room for the hospital logo at the
+            # bottom of the panel without squashing the layout.
+            scaled = pix.scaledToHeight(280, Qt.SmoothTransformation)
             microscope.setPixmap(scaled)
         microscope.setAlignment(Qt.AlignCenter)
         layout.addWidget(microscope, stretch=1, alignment=Qt.AlignCenter)
@@ -162,6 +165,24 @@ class LoginWindow(QWidget):
         for col, (icon_name, title, desc) in enumerate(_FEATURES):
             features.addLayout(self._build_feature_card(icon_name, title, desc), 0, col)
         layout.addLayout(features)
+
+        # Hospital institutional branding (footer of the brand panel).
+        layout.addSpacing(16)
+        divider = QFrame()
+        divider.setObjectName("brandDivider")
+        divider.setFixedHeight(1)
+        layout.addWidget(divider)
+        layout.addSpacing(12)
+
+        hospital_logo = QLabel()
+        hospital_logo.setObjectName("hospitalLogo")
+        hosp_pix = QPixmap(str(ASSET_LOGO_HOSPITAL_WHITE))
+        if not hosp_pix.isNull():
+            hospital_logo.setPixmap(
+                hosp_pix.scaledToWidth(180, Qt.SmoothTransformation)
+            )
+        hospital_logo.setAlignment(Qt.AlignCenter)
+        layout.addWidget(hospital_logo, alignment=Qt.AlignHCenter)
 
         return panel
 

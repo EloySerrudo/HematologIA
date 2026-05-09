@@ -42,6 +42,7 @@ class MainShell(QMainWindow):
 
     nav_clicked = Signal(str)
     logout_requested = Signal()
+    help_requested = Signal()
 
     def __init__(
         self,
@@ -83,6 +84,7 @@ class MainShell(QMainWindow):
         right_col.setSpacing(0)
 
         self.header = Header(self._operario)
+        self.header.help_requested.connect(self.help_requested)
         right_col.addWidget(self.header)
 
         self.content_area = QStackedWidget()

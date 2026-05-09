@@ -55,7 +55,6 @@ from src.database.repositories import captura_repo
 from src.ui.widgets.camera_picker import CameraPicker
 from src.ui.widgets.cell_count_table import CellCountTable
 from src.ui.widgets.coming_soon import show_coming_soon
-from src.ui.widgets.guia_rapida import GuiaRapida
 from src.ui.widgets.live_view_panel import LiveViewPanel
 from src.ui.widgets.thumbnail_strip import ThumbnailStrip
 
@@ -152,8 +151,6 @@ class CapturaView(QWidget):
         middle.setRowStretch(0, 0)
         middle.setRowStretch(1, 1)
         outer.addLayout(middle, stretch=1)
-
-        outer.addWidget(GuiaRapida())
 
     # ----- Header (title + paciente banner) -----
 

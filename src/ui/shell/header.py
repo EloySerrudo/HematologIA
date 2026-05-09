@@ -7,12 +7,14 @@ from __future__ import annotations
 
 from typing import Optional
 
-from PySide6.QtCore import Qt
+import qtawesome as qta
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QPushButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -24,10 +26,17 @@ from src.ui.widgets.avatar import InitialsAvatar
 
 
 HEADER_HEIGHT = 64
+_HELP_ICON_COLOR = "#1E40AF"
 
 
 class Header(QFrame):
-    """White header strip with app title (left) and user identity (right)."""
+    """White header strip with app title (left) and user identity (right).
+
+    Exposes :attr:`help_requested` so the surrounding shell can react to a
+    click on the contextual help button (rendered just before the user block).
+    """
+
+    help_requested = Signal()
 
     def __init__(self, operario: Operario, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
@@ -52,8 +61,22 @@ class Header(QFrame):
         layout.addWidget(title, alignment=Qt.AlignVCenter)
         layout.addStretch()
 
-        # --- Right: user info ---
+        # --- Right: help button + user info ---
+        self._help_button = self._build_help_button()
+        layout.addWidget(self._help_button, alignment=Qt.AlignVCenter)
         layout.addLayout(self._build_user_block(operario))
+
+    def _build_help_button(self) -> QPushButton:
+        btn = QPushButton()
+        btn.setObjectName("headerHelpButton")
+        btn.setIcon(qta.icon("fa5s.question-circle", color=_HELP_ICON_COLOR))
+        btn.setIconSize(qta.icon("fa5s.question-circle").pixmap(20, 20).size())
+        btn.setFixedSize(34, 34)
+        btn.setFlat(True)
+        btn.setCursor(Qt.PointingHandCursor)
+        btn.setToolTip("Ayuda sobre esta pantalla")
+        btn.clicked.connect(self.help_requested)
+        return btn
 
     def _build_user_block(self, operario: Operario) -> QHBoxLayout:
         block = QHBoxLayout()

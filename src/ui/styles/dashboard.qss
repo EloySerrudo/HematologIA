@@ -113,6 +113,19 @@ QLabel#headerUserRole {
     font-size: 11px;
 }
 
+QPushButton#headerHelpButton {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 17px;
+}
+QPushButton#headerHelpButton:hover {
+    background-color: #EFF6FF;
+    border: 1px solid #BFDBFE;
+}
+QPushButton#headerHelpButton:pressed {
+    background-color: #DBEAFE;
+}
+
 
 /* --- Footer --------------------------------------------------------------- */
 QFrame#appFooter {
