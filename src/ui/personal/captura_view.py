@@ -135,7 +135,7 @@ class CapturaView(QWidget):
 
     def _build_ui(self) -> None:
         outer = QVBoxLayout(self)
-        outer.setContentsMargins(28, 24, 28, 24)
+        outer.setContentsMargins(28, 2, 28, 2)
         outer.setSpacing(16)
 
         outer.addLayout(self._build_header_block())
@@ -236,13 +236,15 @@ class CapturaView(QWidget):
 
     def _build_live_view_section(self) -> QFrame:
         section = QFrame()
+        section.setStyleSheet("border: 2px solid blue;")  # DEBUG
         section.setObjectName("captureSection")
         layout = QVBoxLayout(section)
         layout.setContentsMargins(16, 12, 16, 12)
-        layout.setSpacing(10)
+        layout.setSpacing(1)
 
         # Title row + change-camera button
         header_row = QHBoxLayout()
+        # header_row.setSpacing(14)
         title = QLabel("Cámara en Vivo")
         title.setObjectName("sectionTitle")
         tfont = QFont()
@@ -256,20 +258,37 @@ class CapturaView(QWidget):
         change_cam.setCursor(Qt.PointingHandCursor)
         change_cam.clicked.connect(self._open_camera_picker)
 
-        header_row.addWidget(title)
-        header_row.addStretch()
-        header_row.addWidget(change_cam)
-
         # Status indicators (updated by LiveViewPanel.status_changed)
-        status_row = QHBoxLayout()
-        status_row.setSpacing(14)
         self._status_camera = QLabel()
         self._status_format = QLabel()
         self._set_camera_status(False, "Cámara desconectada")
         self._set_format_status(False, "Formato pendiente")
-        status_row.addWidget(self._status_camera)
-        status_row.addWidget(self._status_format)
-        status_row.addStretch()
+
+        # timer + counter (white background so labels are visible).
+        timer_icon = QLabel()
+        timer_icon.setPixmap(qta.icon("fa5s.clock", color=_PRIMARY).pixmap(14, 14))
+        timer_icon.setFixedSize(14, 14)
+
+        self._timer_label = QLabel("Sesión: 00:00:00")
+        self._timer_label.setObjectName("sessionTimer")
+
+        counter_icon = QLabel()
+        counter_icon.setPixmap(qta.icon("fa5s.camera", color=_PRIMARY).pixmap(14, 14))
+        counter_icon.setFixedSize(14, 14)
+
+        self._counter_label = QLabel("0 capturas")
+        self._counter_label.setObjectName("captureCounter")
+        
+        header_row.addWidget(title)
+        header_row.addWidget(self._status_camera)
+        header_row.addWidget(self._status_format)
+        header_row.addWidget(timer_icon)
+        header_row.addWidget(self._timer_label)
+        header_row.addSpacing(24)
+        header_row.addWidget(counter_icon)
+        header_row.addWidget(self._counter_label)
+        header_row.addWidget(change_cam)
+        header_row.addStretch()
 
         # --- Stack: live view (page 0) | camera picker (page 1) ---
         self._live_stack = QStackedWidget()
@@ -286,34 +305,6 @@ class CapturaView(QWidget):
         self._picker.camera_selected.connect(self._on_camera_selected)
         self._picker.cancelled.connect(self._on_picker_cancelled)
         self._live_stack.insertWidget(_PICKER_PAGE, self._picker)
-
-        # Status bar with timer + counter (white background so labels are visible).
-        info_bar = QFrame()
-        info_bar.setObjectName("captureInfoBar")
-        info_row = QHBoxLayout(info_bar)
-        info_row.setContentsMargins(2, 4, 2, 4)
-        info_row.setSpacing(6)
-
-        timer_icon = QLabel()
-        timer_icon.setPixmap(qta.icon("fa5s.clock", color=_PRIMARY).pixmap(14, 14))
-        timer_icon.setFixedSize(14, 14)
-
-        self._timer_label = QLabel("Sesión: 00:00:00")
-        self._timer_label.setObjectName("sessionTimer")
-
-        counter_icon = QLabel()
-        counter_icon.setPixmap(qta.icon("fa5s.camera", color=_PRIMARY).pixmap(14, 14))
-        counter_icon.setFixedSize(14, 14)
-
-        self._counter_label = QLabel("0 capturas")
-        self._counter_label.setObjectName("captureCounter")
-
-        info_row.addWidget(timer_icon)
-        info_row.addWidget(self._timer_label)
-        info_row.addSpacing(24)
-        info_row.addWidget(counter_icon)
-        info_row.addWidget(self._counter_label)
-        info_row.addStretch()
 
         # Action buttons
         actions_row = QHBoxLayout()
@@ -338,9 +329,7 @@ class CapturaView(QWidget):
         actions_row.addWidget(self._capture_btn, stretch=2)
 
         layout.addLayout(header_row)
-        layout.addLayout(status_row)
         layout.addWidget(self._live_stack, stretch=1)
-        layout.addWidget(info_bar)
         layout.addLayout(actions_row)
         return section
 

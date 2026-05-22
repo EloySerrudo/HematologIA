@@ -72,16 +72,10 @@ class CameraPicker(QWidget):
 
     def _build_ui(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(12)
+        layout.setContentsMargins(20, 1, 20, 1)
+        layout.setSpacing(1)
 
-        title = QLabel("Seleccioná la cámara del microscopio")
-        title.setStyleSheet("color: #FFFFFF; font-size: 14px; font-weight: 700;")
-
-        instruction = QLabel(
-            "Elegí en la lista la cámara que corresponde al microscopio.\n"
-            "Probá el preview antes de confirmar para asegurarte que es la correcta."
-        )
+        instruction = QLabel("Elegí en la lista la cámara que corresponde al microscopio.")
         instruction.setStyleSheet("color: #BFDBFE; font-size: 11px;")
         instruction.setWordWrap(True)
 
@@ -101,8 +95,25 @@ class CameraPicker(QWidget):
         self._test_btn.setCursor(Qt.PointingHandCursor)
         self._test_btn.clicked.connect(self._on_test_clicked)
 
+        # --- Confirm + cancel ---
+        self._cancel_btn = QPushButton("Cancelar")
+        self._cancel_btn.setObjectName("captureSecondaryButton")
+        self._cancel_btn.setMinimumHeight(38)
+        self._cancel_btn.setCursor(Qt.PointingHandCursor)
+        self._cancel_btn.clicked.connect(self._on_cancel)
+
+        self._confirm_btn = QPushButton(" Usar esta cámara")
+        self._confirm_btn.setIcon(qta.icon("fa5s.check", color="#FFFFFF"))
+        self._confirm_btn.setObjectName("capturePrimaryButton")
+        self._confirm_btn.setMinimumHeight(38)
+        self._confirm_btn.setCursor(Qt.PointingHandCursor)
+        self._confirm_btn.setDefault(True)
+        self._confirm_btn.clicked.connect(self._on_confirm)
+
         controls.addWidget(self._combo, stretch=1)
         controls.addWidget(self._test_btn)
+        controls.addWidget(self._cancel_btn)
+        controls.addWidget(self._confirm_btn)
 
         # --- Preview area ---
         self._preview = QVideoWidget()
@@ -118,34 +129,10 @@ class CameraPicker(QWidget):
         self._status_label.setStyleSheet("color: #BFDBFE; font-size: 11px;")
         self._status_label.setWordWrap(True)
 
-        # --- Confirm + cancel ---
-        actions = QHBoxLayout()
-        actions.setSpacing(10)
-
-        self._cancel_btn = QPushButton("Cancelar")
-        self._cancel_btn.setObjectName("captureSecondaryButton")
-        self._cancel_btn.setMinimumHeight(38)
-        self._cancel_btn.setCursor(Qt.PointingHandCursor)
-        self._cancel_btn.clicked.connect(self._on_cancel)
-
-        self._confirm_btn = QPushButton(" Usar esta cámara")
-        self._confirm_btn.setIcon(qta.icon("fa5s.check", color="#FFFFFF"))
-        self._confirm_btn.setObjectName("capturePrimaryButton")
-        self._confirm_btn.setMinimumHeight(38)
-        self._confirm_btn.setCursor(Qt.PointingHandCursor)
-        self._confirm_btn.setDefault(True)
-        self._confirm_btn.clicked.connect(self._on_confirm)
-
-        actions.addStretch()
-        actions.addWidget(self._cancel_btn)
-        actions.addWidget(self._confirm_btn)
-
-        layout.addWidget(title)
         layout.addWidget(instruction)
         layout.addLayout(controls)
         layout.addWidget(self._preview, stretch=1)
         layout.addWidget(self._status_label)
-        layout.addLayout(actions)
 
         self.setStyleSheet(
             "QWidget#cameraPicker { background-color: #1E3A8A; border-radius: 6px; }"
