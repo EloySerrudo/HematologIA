@@ -1,46 +1,43 @@
 """Live preview + still-image capture for the Captura screen.
 
-Wraps a :class:`QCamera` + :class:`QMediaCaptureSession` + :class:`QImageCapture`
-into a single widget. Exposes:
+OpenCV/DirectShow-backed live view. See
+:mod:`src.ui.widgets.opencv_capture_thread` for the rationale behind not
+using ``QCamera``.
 
-* :attr:`status_changed` — fires when the camera connects/disconnects so the
-  parent view can update the status indicators.
-* :meth:`capture_to` — kicks off an async still capture; the resulting
-  :class:`QImage` arrives through the :attr:`captured` signal once Qt finishes
-  decoding the frame.
-* :meth:`stop` — releases the camera; safe to call multiple times.
+Public surface (kept stable so :class:`CapturaView` doesn't need to know
+which backend is running):
+
+* :meth:`start(CameraInfo)` — open the device and begin streaming.
+* :meth:`stop()` — release the device; safe to call repeatedly.
+* :meth:`capture()` — grab the latest frame synchronously and emit it
+  through :attr:`captured`.
+* :meth:`is_active()` — whether a capture thread is currently running.
+
+Signals:
+    status_changed(bool, str): emitted when the camera transitions between
+        active/inactive (or on errors).
+    captured(QImage, int): a still capture decoded successfully. The integer
+        is a monotonically increasing request id so callers can correlate
+        captures with their UI feedback.
+    capture_failed(str): the still capture failed.
 """
 from __future__ import annotations
 
 from typing import Optional
 
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtGui import QImage
-from PySide6.QtMultimedia import (
-    QCamera,
-    QCameraDevice,
-    QImageCapture,
-    QMediaCaptureSession,
-)
-from PySide6.QtMultimediaWidgets import QVideoWidget
-from PySide6.QtWidgets import QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 from src.core.logger import get_logger
+from src.ui.widgets.camera_info import CameraInfo
+from src.ui.widgets.opencv_capture_thread import OpenCVCaptureThread
 
 _logger = get_logger(__name__)
 
 
 class LiveViewPanel(QWidget):
-    """Shows a continuously-running camera preview and supports still capture.
-
-    Signals:
-        status_changed(active: bool, message: str): emitted when the camera
-            transitions between active and inactive (or on errors). The parent
-            uses this to update the «Cámara conectada» / «Formato OK» dots.
-        captured(image: QImage, request_id: int): a still capture decoded
-            successfully. The parent decides where to save it.
-        capture_failed(error: str): the still capture failed.
-    """
+    """Shows a continuously-running camera preview and supports still capture."""
 
     status_changed = Signal(bool, str)
     captured = Signal(QImage, int)
@@ -49,10 +46,10 @@ class LiveViewPanel(QWidget):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.setObjectName("liveViewPanel")
-        self._camera: Optional[QCamera] = None
-        self._session: Optional[QMediaCaptureSession] = None
-        self._image_capture: Optional[QImageCapture] = None
-        self._device: Optional[QCameraDevice] = None
+        self._thread: Optional[OpenCVCaptureThread] = None
+        self._device: Optional[CameraInfo] = None
+        self._capture_request_seq: int = 0
+        self._active: bool = False
 
         self._build_ui()
 
@@ -60,116 +57,118 @@ class LiveViewPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        self._video = QVideoWidget()
+        self._video = QLabel()
         self._video.setObjectName("liveViewVideo")
         self._video.setMinimumHeight(280)
+        self._video.setAlignment(Qt.AlignCenter)
         self._video.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self._video.setStyleSheet(
-            "background-color: #111827; border-radius: 6px;"
+            "background-color: #111827; color: #6B7280; border-radius: 6px;"
+            "font-size: 12px;"
         )
+        self._video.setText("Esperando cámara…")
+        # Allow the label to shrink below the natural pixmap size — otherwise
+        # a 2592x1944 frame would force the window wider than the screen.
+        self._video.setScaledContents(False)
         layout.addWidget(self._video)
 
     # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
 
-    def start(self, device: QCameraDevice) -> None:
-        """Start streaming from ``device``. Stops any previous stream first."""
+    def start(self, device: CameraInfo) -> None:
+        """Open ``device`` and begin streaming. Stops any previous stream first."""
         self.stop()
         self._device = device
 
-        self._camera = QCamera(device)
-        self._session = QMediaCaptureSession()
-        self._session.setCamera(self._camera)
-        self._session.setVideoOutput(self._video)
+        thread = OpenCVCaptureThread(device.index, parent=self)
+        thread.frame_ready.connect(self._on_frame)
+        thread.started_ok.connect(self._on_started_ok)
+        thread.failed.connect(self._on_thread_failed)
+        thread.finished.connect(self._on_thread_finished)
 
-        self._image_capture = QImageCapture()
-        # NOTE: QImageCapture defaults to "save to file" mode. We override that
-        # to ask for the in-memory QImage so we can re-encode (PNG + thumb)
-        # ourselves with a single decoded buffer.
-        self._image_capture.setFileFormat(QImageCapture.FileFormat.PNG)
-        self._session.setImageCapture(self._image_capture)
-
-        self._camera.errorOccurred.connect(self._on_camera_error)
-        self._camera.activeChanged.connect(self._on_active_changed)
-        self._image_capture.imageCaptured.connect(self._on_image_captured)
-        self._image_capture.errorOccurred.connect(self._on_image_capture_error)
-
-        try:
-            self._camera.start()
-        except Exception as exc:  # noqa: BLE001
-            _logger.error("Camera start raised: %s", exc)
-            self.status_changed.emit(False, str(exc))
-            return
-
-        _logger.info("Camera started: %s", device.description())
+        self._thread = thread
+        _logger.info("Starting OpenCV camera: index=%s name=%s", device.index, device.name)
+        thread.start()
 
     def stop(self) -> None:
-        """Stop the camera and release Qt resources. Safe to call repeatedly."""
-        if self._camera is not None:
+        """Stop the capture thread and clear the preview. Safe to call repeatedly."""
+        if self._thread is not None:
             try:
-                self._camera.stop()
-            except Exception:  # noqa: BLE001
-                pass
-            self._camera.deleteLater()
-            self._camera = None
-        if self._image_capture is not None:
-            self._image_capture.deleteLater()
-            self._image_capture = None
-        if self._session is not None:
-            self._session.deleteLater()
-            self._session = None
+                self._thread.stop()
+            except Exception as exc:  # noqa: BLE001
+                _logger.warning("Error stopping capture thread: %s", exc)
+            self._thread.deleteLater()
+            self._thread = None
         self._device = None
+        self._active = False
+        self._video.setPixmap(QPixmap())  # clear any leftover frame
+        self._video.setText("Esperando cámara…")
 
     # ------------------------------------------------------------------
     # Capture
     # ------------------------------------------------------------------
 
     def capture(self) -> int:
-        """Trigger an asynchronous still capture.
+        """Grab the latest frame as a still and emit it through :attr:`captured`.
 
-        Returns the request id assigned by Qt (-1 if the capture cannot be
-        scheduled because the camera is not ready). The decoded QImage will
-        arrive through :attr:`captured`.
+        Returns the request id, or ``-1`` if no frame is available yet.
         """
-        if self._image_capture is None or self._camera is None or not self._camera.isActive():
+        if self._thread is None or not self._active:
             self.capture_failed.emit("La cámara no está activa.")
             return -1
-        if not self._image_capture.isReadyForCapture():
-            self.capture_failed.emit("La cámara está procesando una captura previa.")
+
+        image = self._thread.capture_latest()
+        if image is None:
+            self.capture_failed.emit("Todavía no llegó el primer frame.")
             return -1
-        return self._image_capture.capture()
+
+        self._capture_request_seq += 1
+        rid = self._capture_request_seq
+        self.captured.emit(image, rid)
+        return rid
 
     # ------------------------------------------------------------------
-    # Signal handlers
+    # Thread signal handlers
     # ------------------------------------------------------------------
 
-    def _on_active_changed(self, active: bool) -> None:
-        if active:
-            desc = self._device.description() if self._device else "cámara"
-            self.status_changed.emit(True, f"Conectada a «{desc}»")
-        else:
-            self.status_changed.emit(False, "Cámara inactiva")
+    def _on_frame(self, image: QImage) -> None:
+        # Scale on display only — the underlying QImage stays full-res so
+        # capture() returns the sensor's native resolution.
+        if image.isNull():
+            return
+        pix = QPixmap.fromImage(image)
+        scaled = pix.scaled(
+            self._video.size(),
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation,
+        )
+        self._video.setPixmap(scaled)
 
-    def _on_camera_error(self, error, error_string: str) -> None:  # noqa: ARG002
-        _logger.warning("Live camera error: %s", error_string)
-        self.status_changed.emit(False, error_string or "Error desconocido")
+    def _on_started_ok(self, w: int, h: int, fourcc: str) -> None:
+        self._active = True
+        name = self._device.name if self._device else "cámara"
+        self.status_changed.emit(True, f"Conectada a «{name}» — {w}x{h} {fourcc}")
 
-    def _on_image_captured(self, request_id: int, preview: QImage) -> None:
-        # `preview` IS the decoded image (full resolution on most platforms).
-        self.captured.emit(preview, request_id)
+    def _on_thread_failed(self, message: str) -> None:
+        self._active = False
+        _logger.warning("Capture thread reported failure: %s", message)
+        self.status_changed.emit(False, message)
 
-    def _on_image_capture_error(self, request_id: int, error, error_string: str) -> None:  # noqa: ARG002
-        _logger.error("ImageCapture error (req=%s): %s", request_id, error_string)
-        self.capture_failed.emit(error_string or "Error al capturar la imagen.")
+    def _on_thread_finished(self) -> None:
+        # The thread either was stopped voluntarily or died after a failure.
+        # We don't flip status_changed here when there was no failure, because
+        # the explicit stop() path is already silent. After a `failed` signal
+        # the status was already updated to inactive.
+        self._active = False
 
     # ------------------------------------------------------------------
     # Properties
     # ------------------------------------------------------------------
 
     @property
-    def device(self) -> Optional[QCameraDevice]:
+    def device(self) -> Optional[CameraInfo]:
         return self._device
 
     def is_active(self) -> bool:
-        return self._camera is not None and self._camera.isActive()
+        return self._active and self._thread is not None

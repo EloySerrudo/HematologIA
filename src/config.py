@@ -50,6 +50,16 @@ SETTING_LAST_CAMERA: str = "captura/last_camera_description"
 CAPTURA_THUMBNAIL_MAX_PX: int = 256
 CAPTURA_THUMBNAIL_QUALITY: int = 85   # JPEG quality (0-100)
 
+# Camera backend: OpenCV+DirectShow (the only path that detects the SwiftCam
+# SC503; UVC webcams also surface via DirectShow on Windows).
+# 2592x1944 is the SC503 native sensor resolution; if the camera does not
+# support it, OpenCV silently falls back to whatever it negotiates.
+CAMERA_PREFERRED_WIDTH: int = 2592
+CAMERA_PREFERRED_HEIGHT: int = 1944
+CAMERA_PREFERRED_FOURCC: str = "MJPG"
+# How many device indices to probe if pygrabber fails to enumerate.
+CAMERA_FALLBACK_PROBE_INDICES: int = 5
+
 # --- UI dimensions ----------------------------------------------------------
 LOGIN_WINDOW_WIDTH: int = 940
 LOGIN_WINDOW_HEIGHT: int = 620

@@ -27,7 +27,6 @@ from typing import Optional
 import qtawesome as qta
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QFont, QImage, QImageReader, QPixmap
-from PySide6.QtMultimedia import QCameraDevice
 from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
@@ -52,6 +51,7 @@ from src.core.cell_types import empty_counts
 from src.core.logger import get_logger
 from src.database.models import Estudio, Paciente
 from src.database.repositories import captura_repo
+from src.ui.widgets.camera_info import CameraInfo
 from src.ui.widgets.camera_picker import CameraPicker
 from src.ui.widgets.cell_count_table import CellCountTable
 from src.ui.widgets.coming_soon import show_coming_soon
@@ -396,7 +396,7 @@ class CapturaView(QWidget):
         self._set_format_status(False, "Formato pendiente")
         self._live_stack.setCurrentIndex(_PICKER_PAGE)
 
-    def _on_camera_selected(self, device: QCameraDevice) -> None:
+    def _on_camera_selected(self, device: CameraInfo) -> None:
         self._start_camera(device)
 
     def _on_picker_cancelled(self) -> None:
@@ -405,7 +405,7 @@ class CapturaView(QWidget):
         if self._live_view.is_active():
             self._live_stack.setCurrentIndex(_LIVE_PAGE)
 
-    def _start_camera(self, device: QCameraDevice) -> None:
+    def _start_camera(self, device: CameraInfo) -> None:
         self._live_stack.setCurrentIndex(_LIVE_PAGE)
         self._live_view.start(device)
         # `status_changed` will flip the dot to green once the camera is actually streaming.

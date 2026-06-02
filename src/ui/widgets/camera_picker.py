@@ -1,16 +1,14 @@
 """Camera selection panel.
 
-Lists every video input reported by Qt, lets the operator pick one, optionally
-shows a "Probar" preview, and confirms the choice. The selected camera's
-description is persisted in :data:`SETTING_LAST_CAMERA` so future sessions
-restore it automatically.
+Enumerates DirectShow video devices via
+:func:`src.ui.widgets.camera_info.list_video_devices`, lets the operator
+pick one, optionally previews the stream and confirms the choice. The
+selected device's name is persisted in :data:`SETTING_LAST_CAMERA` so the
+next session restores it automatically.
 
-Notes on device identity (Windows/UVC):
-  * ``QCameraDevice.id()`` is opaque bytes that often include the OS device
-    path; it can change across reboots or USB hub re-enumerations.
-  * ``QCameraDevice.description()`` is a human-readable string that tends to
-    stay stable for a given model. We persist *that* and re-resolve to the
-    current ``QCameraDevice`` on startup.
+The "Probar" preview reuses :class:`OpenCVCaptureThread` so what you see
+here is *exactly* what the live view will display once you confirm — no
+backend switching between picker and main view.
 """
 from __future__ import annotations
 
@@ -18,17 +16,9 @@ from typing import Optional
 
 import qtawesome as qta
 from PySide6.QtCore import QSettings, Qt, Signal
-from PySide6.QtGui import QFont
-from PySide6.QtMultimedia import (
-    QCamera,
-    QCameraDevice,
-    QMediaCaptureSession,
-    QMediaDevices,
-)
-from PySide6.QtMultimediaWidgets import QVideoWidget
+from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
-    QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -39,29 +29,29 @@ from PySide6.QtWidgets import (
 
 from src.config import SETTING_LAST_CAMERA
 from src.core.logger import get_logger
+from src.ui.widgets.camera_info import (
+    CameraInfo,
+    list_video_devices,
+    resolve_remembered,
+)
+from src.ui.widgets.opencv_capture_thread import OpenCVCaptureThread
 
 _logger = get_logger(__name__)
 
 _PRIMARY = "#1E40AF"
-_TEXT_MUTED = "#6B7280"
 
 
 class CameraPicker(QWidget):
     """Camera selection page shown inside the live-view stack."""
 
-    camera_selected = Signal(QCameraDevice)
+    camera_selected = Signal(CameraInfo)
     cancelled = Signal()
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.setObjectName("cameraPicker")
-        self._test_camera: Optional[QCamera] = None
-        self._test_session: Optional[QMediaCaptureSession] = None
-
-        # `videoInputsChanged` is an *instance* signal — keep a QMediaDevices
-        # instance alive so we get device hot-plug notifications.
-        self._media_devices = QMediaDevices(self)
-        self._media_devices.videoInputsChanged.connect(self._refresh_camera_list)
+        self._test_thread: Optional[OpenCVCaptureThread] = None
+        self._devices: list[CameraInfo] = []
 
         self._build_ui()
         self._refresh_camera_list()
@@ -75,7 +65,10 @@ class CameraPicker(QWidget):
         layout.setContentsMargins(20, 1, 20, 1)
         layout.setSpacing(1)
 
-        instruction = QLabel("Elegí en la lista la cámara que corresponde al microscopio.")
+        instruction = QLabel(
+            "Elegí en la lista la cámara que corresponde al microscopio. "
+            "Si no aparece, conectá la cámara y tocá «Actualizar lista»."
+        )
         instruction.setStyleSheet("color: #BFDBFE; font-size: 11px;")
         instruction.setWordWrap(True)
 
@@ -87,6 +80,13 @@ class CameraPicker(QWidget):
         self._combo.setObjectName("cameraCombo")
         self._combo.setMinimumHeight(34)
         self._combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+        self._refresh_btn = QPushButton(" Actualizar lista")
+        self._refresh_btn.setIcon(qta.icon("fa5s.sync", color=_PRIMARY))
+        self._refresh_btn.setObjectName("captureSecondaryButton")
+        self._refresh_btn.setMinimumHeight(34)
+        self._refresh_btn.setCursor(Qt.PointingHandCursor)
+        self._refresh_btn.clicked.connect(self._refresh_camera_list)
 
         self._test_btn = QPushButton(" Probar")
         self._test_btn.setIcon(qta.icon("fa5s.eye", color=_PRIMARY))
@@ -111,18 +111,22 @@ class CameraPicker(QWidget):
         self._confirm_btn.clicked.connect(self._on_confirm)
 
         controls.addWidget(self._combo, stretch=1)
+        controls.addWidget(self._refresh_btn)
         controls.addWidget(self._test_btn)
         controls.addWidget(self._cancel_btn)
         controls.addWidget(self._confirm_btn)
 
         # --- Preview area ---
-        self._preview = QVideoWidget()
+        self._preview = QLabel()
         self._preview.setObjectName("cameraPreview")
         self._preview.setMinimumHeight(220)
+        self._preview.setAlignment(Qt.AlignCenter)
         self._preview.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self._preview.setStyleSheet(
-            "background-color: #0F172A; border-radius: 6px;"
+            "background-color: #0F172A; color: #94A3B8; border-radius: 6px;"
+            "font-size: 11px;"
         )
+        self._preview.setText("Tocá «Probar» para ver el preview.")
 
         # --- Status / error message ---
         self._status_label = QLabel("Tocá «Probar» para ver el preview de la cámara seleccionada.")
@@ -148,19 +152,27 @@ class CameraPicker(QWidget):
 
     def _refresh_camera_list(self) -> None:
         """Re-populate the combo with the current set of available cameras."""
-        previous = self._combo.currentData() if self._combo.count() > 0 else None
-        self._combo.clear()
+        # Stop any preview before re-enumerating — we may invalidate the
+        # currently-selected device.
+        self._stop_test()
 
-        devices = QMediaDevices.videoInputs()
-        if not devices:
+        previous_name = None
+        if self._combo.count() > 0:
+            prev = self._combo.currentData()
+            if isinstance(prev, CameraInfo):
+                previous_name = prev.name
+
+        self._combo.clear()
+        self._devices = list_video_devices()
+
+        if not self._devices:
             self._combo.addItem("No se detectaron cámaras", None)
             self._combo.setEnabled(False)
             self._test_btn.setEnabled(False)
             self._confirm_btn.setEnabled(False)
             self._status_label.setText(
                 "No se detectaron cámaras conectadas. Verificá que la cámara del "
-                "microscopio esté enchufada y que el sistema operativo permita "
-                "el acceso a cámaras."
+                "microscopio esté enchufada y que no la esté usando otro programa."
             )
             return
 
@@ -168,29 +180,27 @@ class CameraPicker(QWidget):
         self._test_btn.setEnabled(True)
         self._confirm_btn.setEnabled(True)
 
-        # Persisted choice from a previous session (description string).
-        remembered_desc = QSettings().value(SETTING_LAST_CAMERA, "", type=str)
+        remembered_name = QSettings().value(SETTING_LAST_CAMERA, "", type=str)
         preferred_index = -1
 
-        for idx, dev in enumerate(devices):
-            label = dev.description() or "Cámara sin nombre"
-            if dev.isDefault():
-                label += "  (predeterminada)"
-            self._combo.addItem(label, dev)
+        for i, dev in enumerate(self._devices):
+            self._combo.addItem(dev.name, dev)
+            if preferred_index < 0 and remembered_name and dev.name == remembered_name:
+                preferred_index = i
 
-            # Prefer the remembered camera, then the same instance as before.
-            if preferred_index < 0 and remembered_desc and dev.description() == remembered_desc:
-                preferred_index = idx
-
-        if preferred_index < 0 and isinstance(previous, QCameraDevice):
-            for idx in range(self._combo.count()):
-                cd = self._combo.itemData(idx)
-                if isinstance(cd, QCameraDevice) and cd.id() == previous.id():
-                    preferred_index = idx
+        if preferred_index < 0 and previous_name is not None:
+            for i, dev in enumerate(self._devices):
+                if dev.name == previous_name:
+                    preferred_index = i
                     break
 
         if preferred_index >= 0:
             self._combo.setCurrentIndex(preferred_index)
+
+        self._status_label.setText(
+            f"{len(self._devices)} cámara(s) detectada(s). "
+            "Seleccioná una y tocá «Probar» para verificar."
+        )
 
     # ------------------------------------------------------------------
     # Preview
@@ -198,44 +208,55 @@ class CameraPicker(QWidget):
 
     def _on_test_clicked(self) -> None:
         device = self._combo.currentData()
-        if not isinstance(device, QCameraDevice):
+        if not isinstance(device, CameraInfo):
             return
         self._stop_test()
 
-        try:
-            self._test_camera = QCamera(device)
-            self._test_session = QMediaCaptureSession()
-            self._test_session.setCamera(self._test_camera)
-            self._test_session.setVideoOutput(self._preview)
-            self._test_camera.errorOccurred.connect(self._on_camera_error)
-            self._test_camera.start()
-        except Exception as exc:  # noqa: BLE001
-            _logger.error("Failed to start preview camera: %s", exc)
-            self._status_label.setText(f"No se pudo iniciar el preview: {exc}")
-            return
+        thread = OpenCVCaptureThread(device.index, parent=self)
+        thread.frame_ready.connect(self._on_preview_frame)
+        thread.started_ok.connect(self._on_preview_started)
+        thread.failed.connect(self._on_preview_failed)
+        self._test_thread = thread
+        thread.start()
 
         self._status_label.setText(
-            f"Mostrando preview de «{device.description()}». "
-            "Si la imagen no es del microscopio, elegí otra cámara y volvé a probar."
+            f"Abriendo «{device.name}»… esperá el primer frame."
         )
 
     def _stop_test(self) -> None:
-        if self._test_camera is not None:
+        if self._test_thread is not None:
             try:
-                self._test_camera.stop()
+                self._test_thread.stop()
             except Exception:  # noqa: BLE001
                 pass
-            self._test_camera.deleteLater()
-            self._test_camera = None
-        if self._test_session is not None:
-            self._test_session.deleteLater()
-            self._test_session = None
+            self._test_thread.deleteLater()
+            self._test_thread = None
 
-    def _on_camera_error(self, error, error_string: str) -> None:  # noqa: ARG002
-        _logger.warning("Preview camera error: %s", error_string)
+    def _on_preview_frame(self, image: QImage) -> None:
+        if image.isNull():
+            return
+        pix = QPixmap.fromImage(image)
+        scaled = pix.scaled(
+            self._preview.size(),
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation,
+        )
+        self._preview.setPixmap(scaled)
+
+    def _on_preview_started(self, w: int, h: int, fourcc: str) -> None:
+        device = self._combo.currentData()
+        name = device.name if isinstance(device, CameraInfo) else "cámara"
         self._status_label.setText(
-            f"Error al acceder a la cámara: {error_string or 'desconocido'}. "
-            "Probá con otro dispositivo."
+            f"Mostrando preview de «{name}» — {w}x{h} {fourcc}. "
+            "Si no es la cámara del microscopio, elegí otra y volvé a probar."
+        )
+
+    def _on_preview_failed(self, message: str) -> None:
+        _logger.warning("Preview camera failed: %s", message)
+        self._preview.setPixmap(QPixmap())
+        self._preview.setText("Sin señal")
+        self._status_label.setText(
+            f"Error al acceder a la cámara: {message}. Probá con otro dispositivo."
         )
 
     # ------------------------------------------------------------------
@@ -244,11 +265,10 @@ class CameraPicker(QWidget):
 
     def _on_confirm(self) -> None:
         device = self._combo.currentData()
-        if not isinstance(device, QCameraDevice):
+        if not isinstance(device, CameraInfo):
             return
-        # Persist the description so next session restores the same camera.
-        QSettings().setValue(SETTING_LAST_CAMERA, device.description())
-        _logger.info("Camera selected and persisted: %s", device.description())
+        QSettings().setValue(SETTING_LAST_CAMERA, device.name)
+        _logger.info("Camera selected and persisted: %s (#%s)", device.name, device.index)
         self._stop_test()
         self.camera_selected.emit(device)
 
@@ -261,16 +281,11 @@ class CameraPicker(QWidget):
     # ------------------------------------------------------------------
 
     def stop(self) -> None:
-        """Release the preview camera. Safe to call from the parent's teardown."""
+        """Release the preview thread. Safe to call from the parent's teardown."""
         self._stop_test()
 
     @staticmethod
-    def resolve_remembered_camera() -> Optional[QCameraDevice]:
+    def resolve_remembered_camera() -> Optional[CameraInfo]:
         """If a camera was persisted in QSettings and is still connected, return it."""
-        desc = QSettings().value(SETTING_LAST_CAMERA, "", type=str)
-        if not desc:
-            return None
-        for dev in QMediaDevices.videoInputs():
-            if dev.description() == desc:
-                return dev
-        return None
+        name = QSettings().value(SETTING_LAST_CAMERA, "", type=str)
+        return resolve_remembered(name)

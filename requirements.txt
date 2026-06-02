@@ -1,3 +1,10 @@
 PySide6>=6.6,<7.0
 bcrypt>=4.1,<5.0
 qtawesome>=1.3,<2.0
+# Camera backend: OpenCV (DirectShow capture) + pygrabber (DirectShow device
+# enumeration with human-readable names). Required for the SwiftCam SC503 and
+# any other microscope camera that does not expose a Windows Media Foundation /
+# UVC interface.
+opencv-python>=4.8,<5.0
+pygrabber>=0.2,<1.0
+numpy>=1.24,<3.0
